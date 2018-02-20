@@ -4,29 +4,29 @@ function Get-TargetResource
     [OutputType([System.Collections.Hashtable])]
     param
     (
-        [parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true)]
         [System.String]
         $SetupFile,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.Boolean]
         $ShutdownServices,
 
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet("mon","tue","wed","thu","fri","sat","sun")]
         [System.String[]]
         $BinaryInstallDays,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.String]
         $BinaryInstallTime,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet("Present","Absent")]
         [System.String]
         $Ensure = "Present",
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.Management.Automation.PSCredential]
         $InstallAccount
     )
@@ -206,29 +206,29 @@ function Set-TargetResource
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidGlobalVars", "")]
     param
     (
-        [parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true)]
         [System.String]
         $SetupFile,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.Boolean]
         $ShutdownServices,
 
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet("mon","tue","wed","thu","fri","sat","sun")]
         [System.String[]]
         $BinaryInstallDays,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.String]
         $BinaryInstallTime,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet("Present","Absent")]
         [System.String]
         $Ensure = "Present",
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.Management.Automation.PSCredential]
         $InstallAccount
     )
@@ -381,7 +381,7 @@ function Set-TargetResource
         }
         
         if($osearchSvc.Status -eq "Running") 
-        { 
+        {
             $osearchStopped = $true
             Set-Service -Name $searchServiceName -StartupType Disabled
             $osearchSvc.Stop() 
@@ -428,9 +428,10 @@ function Set-TargetResource
                                -PassThru
 
         # Error codes: https://aka.ms/installerrorcodes
-        switch ($setup.ExitCode) {
+        switch ($setup.ExitCode)
+        {
             0
-            {  
+            {
                 Write-Verbose -Message "SharePoint update binary installation complete."
             }
             17022
@@ -472,7 +473,7 @@ function Set-TargetResource
         }
 
         if($hostControllerStopped -eq $true)
-        { 
+        {
             Set-Service "SPSearchHostController" -StartupType Automatic 
             $hostControllerSvc.Start() 
         } 
@@ -500,29 +501,29 @@ function Test-TargetResource
     [OutputType([System.Boolean])]
     param
     (
-        [parameter(Mandatory = $true)]
+        [Parameter(Mandatory = $true)]
         [System.String]
         $SetupFile,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.Boolean]
         $ShutdownServices,
 
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet("mon","tue","wed","thu","fri","sat","sun")]
         [System.String[]]
         $BinaryInstallDays,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.String]
         $BinaryInstallTime,
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [ValidateSet("Present","Absent")]
         [System.String]
         $Ensure = "Present",
         
-        [parameter(Mandatory = $false)]
+        [Parameter()]
         [System.Management.Automation.PSCredential]
         $InstallAccount
     )
