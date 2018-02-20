@@ -30,6 +30,8 @@ function Get-TargetResource
         [System.Management.Automation.PSCredential]
         $InstallAccount
     )
+	
+	
 
     if ($Ensure -eq "Absent")
     {
@@ -168,7 +170,7 @@ function Get-TargetResource
                                       -Arguments $productName `
                                       -ScriptBlock {
             $productToCheck = $args[0]
-            return Get-SPDscFarmVersionInfo
+            return Get-SPDscCUVersionInfo
         }
     }
 

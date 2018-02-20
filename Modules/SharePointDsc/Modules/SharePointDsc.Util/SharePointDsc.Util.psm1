@@ -39,6 +39,26 @@ function Get-SPDSCAssemblyVersion
     return (Get-Command $PathToAssembly).FileVersionInfo.FileMajorPart
 }
 
+
+
+Function Get-LatestInstalledPatch($serverProductInfo, $patchableUnitInfo)
+{
+     $missingPatches = $serverProductInfo.RequiredButMissingPatches
+     $latestPatch = ""
+     foreach($patch in $patchableUnitInfo.Patches)
+     {
+        $missingPatch = $missingPatches |? {$_.Version -eq $patch.Version}
+        if(-not $missingPatch)
+        {
+            if($patch.Version.ToString() -gt $latestPatch)
+            {
+                $latestPatch = $patch.Version.ToString()
+            }
+        }                                
+     } 
+
+     return $latestPatch
+}
 function Get-SPDscFarmVersionInfo
 {
     param
@@ -93,7 +113,8 @@ function Get-SPDscFarmVersionInfo
                 foreach ($patchableUnitInfo in $patchableUnitsInfo)
                 {
                     # Loop through version of the patchableUnit
-                    $currentVersion = $patchableUnitInfo.LatestPatch.Version.ToString()
+                    #$currentVersion = $patchableUnitInfo.LatestPatch.Version.ToString()
+                    $currentVersion = Get-LatestInstalledPatch $serverProductInfo $patchableUnitInfo
 
                     # Check if the version of the patchableUnit is the highest for the installed product
                     if ($currentVersion -gt $versionInfo.Highest)
@@ -746,5 +767,89 @@ function Remove-SPDSCGenericObject
     )
     $SourceCollection.Remove($Target)
 }
+
+function Get-SPDscCUVersionInfo
+{
+    param
+    (
+        [parameter(Mandatory = $false)]
+        [System.String]
+        $ProductToCheck
+    )
+
+    $farm = Get-SPFarm
+    $productVersions = [Microsoft.SharePoint.Administration.SPProductVersions]::GetProductVersions($farm)
+    $server = Get-SPServer -Identity $env:COMPUTERNAME
+    $versionInfo = @{}
+    $versionInfo.Highest = ""
+    $versionInfo.Lowest = ""
+
+    $serverProductInfo = $productVersions.GetServerProductInfo($server.id)
+    $products = $serverProductInfo.Products
+
+    if ($ProductToCheck)
+    {
+        $products = $products | Where-Object -FilterScript { 
+            $_ -eq $ProductToCheck 
+        }
+        
+        if ($null -eq $products)
+        {
+            throw "Product not found: $ProductToCheck"
+        }
+    }
+
+    # Loop through all products
+    foreach ($product in $products)
+    {
+        $singleProductInfo = $serverProductInfo.GetSingleProductInfo($product)
+        $patchableUnits = $singleProductInfo.PatchableUnitDisplayNames
+
+        # Loop through all individual components within the product
+        foreach ($patchableUnit in $patchableUnits)
+        {
+            # Check if the displayname is the Proofing tools (always mentioned in first product,
+            # generates noise)
+            if (($patchableUnit -notmatch "Microsoft Server Proof") -and
+                ($patchableUnit -notmatch "SQL Express") -and
+                ($patchableUnit -notmatch "OMUI") -and
+                ($patchableUnit -notmatch "XMUI") -and
+                ($patchableUnit -notmatch "Project Server") -and
+                ($patchableUnit -notmatch "Microsoft SharePoint Server (2013|2016)") -and
+                ($patchableUnit -notmatch "Lang Pack$"))
+            {
+                $patchableUnitsInfo = $singleProductInfo.GetPatchableUnitInfoByDisplayName($patchableUnit)
+                $currentVersion = ""
+                foreach ($patchableUnitInfo in $patchableUnitsInfo)
+                {
+                    # Loop through version of the patchableUnit
+                    #$currentVersion = $patchableUnitInfo.LatestPatch.Version.ToString()
+					$currentVersion = Get-LatestInstalledPatch $serverProductInfo $patchableUnitInfo
+
+                    # Check if the version of the patchableUnit is the highest for the installed product
+                    if ($currentVersion -gt $versionInfo.Highest)
+                    {
+                        $versionInfo.Highest = $currentVersion
+                    }
+
+                    if ($versionInfo.Lowest -eq "")
+                    {
+                        $versionInfo.Lowest = $currentVersion
+                    }
+                    else
+                    {
+                        if ($currentversion -lt $versionInfo.Lowest)
+                        {
+                            $versionInfo.Lowest = $currentVersion
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return $versionInfo
+}
+
+
 
 Export-ModuleMember -Function *

@@ -120,7 +120,7 @@ function Get-TargetResource
                 ProxyName       = $proxyName
                 ApplicationPool = $serviceApp.ApplicationPool.Name
                 DatabaseName = $db.Name
-                DatabaseServer = $db.Server.Name
+                DatabaseServer = $db.NormalizedDataSource
                 FailoverDatabaseServer = $db.FailoverServer
                 InstallAccount = $params.InstallAccount
                 Ensure = "Present"
@@ -254,8 +254,8 @@ function Set-TargetResource
         if ($PSBoundParameters.ContainsKey("DatabaseServer") -and `
            ($result.DatabaseServer -ne $DatabaseServer))
         {
-            throw ("Specified database server does not match the actual " + `
-                   "database server. This resource cannot move the database " + `
+            throw ("Specified database server (" + $DatabaseServer + ") does not match the actual " + `
+                   "database server (" + $result.DatabaseServer + "). This resource cannot move the database " + `
                    "to a different SQL instance.")
         }
 
